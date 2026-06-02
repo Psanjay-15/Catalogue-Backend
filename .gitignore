@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+app/static/previews/*.png
+app/static/samples/*.html
+.DS_Store
+docker-compose.yml
+.env.example
