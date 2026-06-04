@@ -1,5 +1,4 @@
 from __future__ import annotations
-import json
 from app.config import settings
 from app.core.exceptions import LLMError, RateLimitError
 from app.domain.schemas.catalog import Catalog
@@ -29,24 +28,25 @@ class OpenAIProvider(LLMProvider):
         user_prompt = build_refine_user_prompt(raw_text, style)
 
         try:
-            response = await client.chat.completions.create(
+            response = await client.chat.completions.parse(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
-                response_format={"type": "json_object"},
+                response_format=Catalog,
                 temperature=0.6,
             )
         except Exception as e:
             self._reraise(e)
 
-        payload = response.choices[0].message.content or ""
-        try:
-            data = json.loads(payload)
-        except json.JSONDecodeError as e:
-            raise LLMError(f"OpenAI returned invalid JSON: {e}\nPayload: {payload[:500]}") from e
-        return Catalog.model_validate(data)
+        message = response.choices[0].message
+        if getattr(message, "refusal", None):
+            raise LLMError(f"OpenAI refused the request: {message.refusal}")
+        catalog = message.parsed
+        if catalog is None:
+            raise LLMError("OpenAI returned no parsed catalog.")
+        return catalog
 
     async def freestyle_html(
         self,

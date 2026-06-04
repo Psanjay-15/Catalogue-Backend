@@ -81,62 +81,6 @@ Image queries (important — these drive AI image GENERATION, not stock search):
 """
 
 
-SCHEMA_HINT = """An EXAMPLE Catalog showing the exact JSON shape — copy the keys, replace the values
-with content from the source. Replace EVERY example value; do NOT keep these example
-strings in your output:
-
-{
-  "brand_name": "Sunrise Yoga Studio",
-  "hero": {
-    "headline": "Move With Intention.",
-    "subheadline": "Daily classes for every level in the heart of Brooklyn.",
-    "tagline": "Est. 2014",
-    "image_query": "warm sunlit yoga studio with wooden floor"
-  },
-  "overview": "A neighborhood studio offering Vinyasa, Yin and restorative classes seven days a week.",
-  "about_image_query": "yoga teacher guiding student through a pose",
-  "values": ["Mindful", "Inclusive", "Local"],
-  "stats": [
-    {"value": "200+", "label": "students per week", "percent": null},
-    {"value": "10", "label": "years in Brooklyn", "percent": null},
-    {"value": "92%", "label": "monthly retention", "percent": 92}
-  ],
-  "products": [
-    {
-      "name": "Vinyasa Flow",
-      "tagline": "Energizing Movement",
-      "description": "A flowing 60-minute class linking breath to motion, suitable for all levels.",
-      "features": ["60 minutes", "All levels", "Includes mat"],
-      "specs": [{"label": "Length", "value": "60 min"}],
-      "pricing": [{"name": "Drop-in", "description": null, "price": "$22", "highlight": false}],
-      "image_query": "vinyasa yoga class in warm studio light"
-    }
-  ],
-  "features": [
-    {"title": "Drop-in Welcome", "description": "No subscription required — try a single class anytime."}
-  ],
-  "benefits": [],
-  "specifications": [],
-  "pricing": [],
-  "testimonials": [
-    {"quote": "The best studio I've found in Brooklyn.", "author": "Priya S.", "role": "Member since 2022", "image_query": "smiling woman in yoga clothing"}
-  ],
-  "faqs": [
-    {"question": "Do I need to bring a mat?", "answer": "No — we provide mats and props free of charge."}
-  ],
-  "contact": {"email": "hello@sunriseyoga.co", "phone": "+1 718-555-0142", "website": "sunriseyoga.co", "address": "248 Bedford Ave, Brooklyn, NY"},
-  "call_to_action": {"title": "Book Your First Class", "description": "Your first drop-in is on the house.", "button_text": "Reserve a Spot"}
-}
-
-CRITICAL RULES:
-- Every "features" item MUST have BOTH "title" AND "description". Never return a feature object with only a title.
-- Every "benefits" item MUST have BOTH "title" AND "description".
-- "percent" MUST be either an integer 0-100 OR the JSON literal null. NEVER the string "int 0-100 or null".
-- All "image_query" fields should be 4-10 vivid keywords; null is acceptable but a real query is better.
-- Return only ONE catalog JSON object, no commentary, no markdown fences.
-"""
-
-
 FREESTYLE_PROMPT = """You are a senior brand designer at a premium agency. You are designing a polished single-page brochure as one self-contained HTML file. Treat this like a portfolio piece, not a generic web page.
 
 ═══════════════════════════════════════════════════════════
@@ -206,12 +150,20 @@ Return ONLY raw HTML. Start with `<!DOCTYPE html>` and end with `</html>`. No ma
 
 
 def build_refine_user_prompt(raw_text: str, style: str) -> str:
-    """Build the user-turn prompt fed into every provider."""
+    """Build the user-turn prompt fed into every provider.
+
+    The JSON shape is NOT described here. Every provider now enforces the output
+    structure with its native structured-output mode, where the schema is derived
+    directly from the `Catalog` Pydantic model (the single source of truth). This
+    avoids drift between a hand-written example and the real model, and lets the
+    LLM leave inapplicable sections empty instead of mimicking a fixed example.
+    """
     return (
         f"Style to write in: {style}\n\n"
-        f"Raw input to refine and structure:\n---\n{raw_text}\n---\n\n"
-        f"Return a single JSON object matching exactly this shape (omit any field "
-        f"you don't have facts for; lists may be empty):\n\n{SCHEMA_HINT}\n"
+        f"Refine and structure the source below into a single-page catalog. "
+        f"Fill only the sections you have real material for — leave everything "
+        f"else empty or null. Never invent facts.\n\n"
+        f"Source:\n---\n{raw_text}\n---"
     )
 
 

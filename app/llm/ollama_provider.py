@@ -28,7 +28,7 @@ class OllamaProvider(LLMProvider):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
-            "format": "json",         
+            "format": Catalog.model_json_schema(),
             "stream": False,
             "options": {"temperature": 0.6},
         }

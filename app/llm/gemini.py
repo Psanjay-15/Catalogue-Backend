@@ -34,6 +34,7 @@ class GeminiProvider(LLMProvider):
         config = genai_types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
             response_mime_type="application/json",
+            response_schema=Catalog,
             temperature=0.6,
         )
         user_prompt = build_refine_user_prompt(raw_text, style)
@@ -46,6 +47,11 @@ class GeminiProvider(LLMProvider):
             )
 
         response = await self._run(_call)
+
+        parsed = getattr(response, "parsed", None)
+        if isinstance(parsed, Catalog):
+            return parsed
+
         payload = response.text or ""
         try:
             data = json.loads(payload)

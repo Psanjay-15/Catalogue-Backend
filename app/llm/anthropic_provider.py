@@ -1,5 +1,4 @@
 from __future__ import annotations
-import json
 from app.config import settings
 from app.core.exceptions import LLMError, RateLimitError
 from app.domain.schemas.catalog import Catalog
@@ -11,9 +10,15 @@ from app.llm.prompts import (
 )
 
 
-_JSON_ONLY_REMINDER = (
-    "\n\nIMPORTANT: respond with a single JSON object only. No prose, no markdown fences."
-)
+# Claude has no JSON-schema response mode, so we force structured output via a
+# single tool whose input_schema IS the Catalog schema (derived from the Pydantic
+# model). `tool_choice` forces Claude to call it, so its arguments are the catalog.
+_CATALOG_TOOL_NAME = "build_catalog"
+_CATALOG_TOOL = {
+    "name": _CATALOG_TOOL_NAME,
+    "description": "Return the structured single-page catalog built from the source.",
+    "input_schema": Catalog.model_json_schema(),
+}
 
 
 class AnthropicProvider(LLMProvider):
@@ -38,23 +43,23 @@ class AnthropicProvider(LLMProvider):
                 model=self.model_name,
                 max_tokens=4096,
                 temperature=0.6,
-                system=SYSTEM_PROMPT + _JSON_ONLY_REMINDER,
+                system=SYSTEM_PROMPT,
+                tools=[_CATALOG_TOOL],
+                tool_choice={"type": "tool", "name": _CATALOG_TOOL_NAME},
                 messages=[{"role": "user", "content": user_prompt}],
             )
         except Exception as e:
             self._reraise(e)
 
-        payload = ""
+        # Forced tool_choice means Claude responds with a tool_use block whose
+        # `input` is the catalog object already shaped to the schema.
+        data = None
         for block in response.content:
-            if getattr(block, "type", None) == "text":
-                payload = block.text
+            if getattr(block, "type", None) == "tool_use" and block.name == _CATALOG_TOOL_NAME:
+                data = block.input
                 break
-        payload = self._strip_code_fences(payload)
-
-        try:
-            data = json.loads(payload)
-        except json.JSONDecodeError as e:
-            raise LLMError(f"Claude returned invalid JSON: {e}\nPayload: {payload[:500]}") from e
+        if data is None:
+            raise LLMError("Claude did not return the build_catalog tool output.")
         return Catalog.model_validate(data)
 
     async def freestyle_html(
