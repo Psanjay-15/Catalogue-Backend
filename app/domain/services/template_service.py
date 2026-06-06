@@ -33,12 +33,6 @@ class TemplateService:
             raise NotFoundError(f"Template '{template_id}' not found")
         return self._to_response(row)
 
-    async def get_sample_html(self, db: AsyncSession, template_id: str) -> str:
-        row = await template_repo.get(db, template_id)
-        if row is None:
-            raise NotFoundError(f"Template '{template_id}' not found")
-        return row.sample_html
-
     @staticmethod
     def _to_response(t: Template) -> TemplateResponse:
         return TemplateResponse(
@@ -46,8 +40,7 @@ class TemplateService:
             name=t.name,
             description=t.description,
             kind=t.kind,
-            preview_image_url=f"/api/v1/templates/{t.id}/preview.png",
-            sample_html_url=f"/api/v1/templates/{t.id}/sample.html",
+            sample_html=t.sample_html,
         )
 
 

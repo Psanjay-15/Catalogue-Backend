@@ -10,9 +10,8 @@ class TemplateResponse(BaseModel):
     id: str
     name: str
     description: str
-    kind: str                                 
-    preview_image_url: str                    
-    sample_html_url: str                      
+    kind: str
+    sample_html: str
 
 
 class CatalogStatusResponse(BaseModel):

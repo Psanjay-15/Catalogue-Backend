@@ -45,19 +45,10 @@ class Settings:
         )
 
         self.templates_dir: Path = _env_path("TEMPLATES_DIR", PROJECT_ROOT / "templates")
-        self.static_dir: Path = _env_path("STATIC_DIR", SERVER_ROOT / "app" / "static")
 
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
-
-    @property
-    def previews_dir(self) -> Path:
-        return self.static_dir / "previews"
-
-    @property
-    def samples_dir(self) -> Path:
-        return self.static_dir / "samples"
 
 
 settings = Settings()

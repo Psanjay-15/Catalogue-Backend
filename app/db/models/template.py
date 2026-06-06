@@ -14,5 +14,4 @@ class Template(Base):
     description:  Mapped[str] = mapped_column(Text, nullable=False)
     kind:         Mapped[str] = mapped_column(String(32), nullable=False)
     sample_html:  Mapped[str] = mapped_column(Text, nullable=False)
-    preview_path: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at:   Mapped[datetime] = mapped_column(server_default=func.now())

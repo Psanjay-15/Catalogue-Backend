@@ -8,7 +8,6 @@ from app.core.logging import configure_logging, get_logger
 from app.db.repositories.template_repo import template_repo
 from app.domain.schemas.catalog import VALID_TEMPLATES, Catalog
 from app.domain.services.template_service import TEMPLATE_CATALOG
-from app.exporters.png_exporter import PngExporter
 from app.extractors.factory import extract_text
 from app.llm.factory import get_llm_provider
 from app.renderers.factory import get_renderer
@@ -36,20 +35,10 @@ async def _load_or_build_sample_catalog() -> Catalog:
     return cat
 
 
-async def _render_preview(template_id: str, sample: Catalog) -> tuple[str, Path]:
-   
+async def _render_sample_html(template_id: str, sample: Catalog) -> str:
     llm = get_llm_provider(settings.default_llm_provider) if template_id == "ai" else None
     renderer = get_renderer(template_id, llm=llm)
-    html = await renderer.render(sample, theme="light", page_size="A4")
-
-    html_path = settings.samples_dir / f"{template_id}.html"
-    html_path.parent.mkdir(parents=True, exist_ok=True)
-    html_path.write_text(html, encoding="utf-8")
-
-    png_path = settings.previews_dir / f"{template_id}.png"
-    await PngExporter().export(html, png_path)
-
-    return html, png_path
+    return await renderer.render(sample, theme="light", page_size="A4")
 
 
 async def main() -> None:
@@ -62,8 +51,8 @@ async def main() -> None:
     async with AsyncSessionLocal() as db:
         for template_id in sorted(VALID_TEMPLATES):
             try:
-                log.info("rendering preview for %s ...", template_id)
-                html, png_path = await _render_preview(template_id, sample)
+                log.info("rendering sample for %s ...", template_id)
+                html = await _render_sample_html(template_id, sample)
             except Exception as e:
                 log.error("FAILED %s: %s", template_id, e)
                 continue
@@ -80,10 +69,9 @@ async def main() -> None:
                     "description":  description,
                     "kind":         kind,
                     "sample_html":  html,
-                    "preview_path": f"previews/{template_id}.png",
                 },
             )
-            log.info("  -> seeded templates.%s (preview %s)", template_id, png_path.name)
+            log.info("  -> seeded templates.%s", template_id)
 
     log.info("done. Visit http://localhost:8000/api/v1/templates to see the list.")
 

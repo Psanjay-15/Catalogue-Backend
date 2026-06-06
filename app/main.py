@@ -24,8 +24,6 @@ log = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("starting AI Catalog Maker server")
-    settings.previews_dir.mkdir(parents=True, exist_ok=True)
-    settings.samples_dir.mkdir(parents=True, exist_ok=True)
     await create_all()
     log.info("server ready")
     yield

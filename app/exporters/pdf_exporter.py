@@ -38,58 +38,9 @@ class PdfExporter:
         self.base_url = base_url
 
     async def render(self, html: str) -> bytes:
-        """Render `html` to PDF bytes (no disk I/O).
-
-        Tries headless Chromium first (matches the preview exactly); falls back
-        to WeasyPrint only if Chromium is unavailable.
-        """
+       
         fitted = inject_pdf_fit(html)
-        try:
-            return await self._render_chromium(fitted)
-        except Exception as e:
-            log.warning(
-                "Chromium PDF render failed (%s); falling back to WeasyPrint. "
-                "Fonts/layout may differ from the preview.",
-                e,
-            )
-            return await self._render_weasyprint(fitted)
-
-    async def _render_chromium(self, html: str) -> bytes:
-        """Print to PDF with headless Chromium — identical to the browser preview."""
-        try:
-            from playwright.async_api import async_playwright
-        except ImportError as e:
-            raise ExportError(
-                "Playwright not installed. Run "
-                "`pip install playwright && playwright install chromium`."
-            ) from e
-
-        async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            try:
-                page = await browser.new_page()
-                await page.set_content(
-                    html, wait_until="domcontentloaded", timeout=20_000
-                )
-
-                try:
-                    await page.wait_for_load_state("networkidle", timeout=20_000)
-                except Exception:
-                    pass
-
-                try:
-                    await page.evaluate("async () => { await document.fonts.ready; }")
-                except Exception:
-                    pass
-
-                # No `path=` → page.pdf() returns the PDF as bytes.
-                return await page.pdf(
-                    prefer_css_page_size=True,
-                    print_background=True,
-                    margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
-                )
-            finally:
-                await browser.close()
+        return await self._render_weasyprint(fitted)
 
     async def _render_weasyprint(self, html: str) -> bytes:
         def _render() -> bytes:

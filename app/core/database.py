@@ -46,6 +46,7 @@ _ADDITIVE_MIGRATIONS: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS ix_catalogs_saved ON catalogs (saved)",
     "ALTER TABLE catalogs ADD COLUMN IF NOT EXISTS pdf_bytes bytea",
     "ALTER TABLE catalogs DROP COLUMN IF EXISTS pdf_path",
+    "ALTER TABLE templates DROP COLUMN IF EXISTS preview_path",
 )
 
 
