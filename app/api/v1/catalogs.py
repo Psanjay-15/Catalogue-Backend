@@ -1,6 +1,7 @@
 from __future__ import annotations
 import uuid
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pathlib import Path
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from app.api.v1.deps import SessionDep
 from app.db.models.catalog import STATUS_DONE, STATUS_QUEUED, Catalog
@@ -11,12 +12,21 @@ from app.domain.schemas.requests import (
     SaveCatalogRequest,
     UpdateCatalogHtmlRequest,
 )
-from app.domain.schemas.responses import CatalogStatusResponse, SavedCatalogSummary
+from app.domain.schemas.responses import (
+    CatalogStatusResponse,
+    ExtractTextResponse,
+    SavedCatalogSummary,
+)
 from app.domain.services.catalog_service import catalog_service
+from app.extractors.factory import extract_text_from_bytes
 from app.exporters.pdf_exporter import PdfExporter
 
 
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
+
+_ALLOWED_UPLOAD_EXT = {".pdf", ".docx", ".txt"}
+_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+_MAX_SOURCE_TEXT = 100_000
 
 def _to_response(c: Catalog) -> CatalogStatusResponse:
     return CatalogStatusResponse(
@@ -67,7 +77,7 @@ async def create_catalog(
 ) -> CatalogStatusResponse:
 
     if not body.source_text:
-        raise HTTPException(422, "source_text is required (file uploads coming in a later iteration).")
+        raise HTTPException(422, "source_text is required.")
 
     row = Catalog(
         id=uuid.uuid4(),
@@ -83,6 +93,36 @@ async def create_catalog(
 
     background.add_task(catalog_service.run_pipeline, row.id)
     return _to_response(row)
+
+
+@router.post("/extract", response_model=ExtractTextResponse)
+async def extract_source_text(file: UploadFile = File(...)) -> ExtractTextResponse:
+
+    filename = file.filename or ""
+    ext = Path(filename).suffix.lower()
+    if ext not in _ALLOWED_UPLOAD_EXT:
+        raise HTTPException(
+            422, f"Unsupported file type '{ext or '?'}'. Upload a PDF, DOCX, or TXT."
+        )
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(422, "The uploaded file is empty.")
+    if len(data) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large — the maximum is 10 MB.")
+
+    try:
+        text = extract_text_from_bytes(filename, data)
+    except Exception as e:
+        raise HTTPException(422, f"Could not read that file: {e}")
+
+    text = (text or "").strip()
+    if not text:
+        raise HTTPException(422, "No readable text was found in that file.")
+    if len(text) > _MAX_SOURCE_TEXT:
+        text = text[:_MAX_SOURCE_TEXT]
+
+    return ExtractTextResponse(filename=filename, chars=len(text), text=text)
 
 
 @router.get("/saved", response_model=list[SavedCatalogSummary])

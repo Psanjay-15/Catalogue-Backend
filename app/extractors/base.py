@@ -8,5 +8,10 @@ class Extractor(ABC):
 
     @abstractmethod
     def extract(self, source: Union[str, Path]) -> str:
-        """Return clean plain-text content extracted from `source`."""
+        """Return clean plain-text content extracted from `source` (a file path)."""
+        ...
+
+    @abstractmethod
+    def extract_bytes(self, data: bytes) -> str:
+        """Return clean plain-text extracted from in-memory file bytes (uploads)."""
         ...

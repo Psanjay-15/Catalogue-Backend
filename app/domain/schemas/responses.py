@@ -53,3 +53,9 @@ class SavedCatalogSummary(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = "ok"
+
+
+class ExtractTextResponse(BaseModel):
+    filename: str
+    chars: int
+    text: str

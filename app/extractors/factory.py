@@ -28,3 +28,15 @@ def for_source(source: Union[str, Path]) -> Extractor:
 
 def extract_text(source: Union[str, Path]) -> str:
     return for_source(source).extract(source)
+
+
+def extract_text_from_bytes(filename: str, data: bytes) -> str:
+    """Extract plain text from an uploaded file's bytes, dispatching by its
+    extension. In-memory only — no path is derived from user input."""
+    ext = Path(filename or "").suffix.lower()
+    extractor_cls = _REGISTRY.get(ext)
+    if extractor_cls is None:
+        raise UnsupportedFormatError(
+            f"Unsupported file type: {ext or '?'}. Supported: {sorted(_REGISTRY)}"
+        )
+    return extractor_cls().extract_bytes(data)
