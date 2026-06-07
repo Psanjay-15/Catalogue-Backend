@@ -75,7 +75,7 @@ async def create_catalog(
         llm_provider=body.llm_provider,
         style=body.style,
         theme=body.theme,
-        page_size=body.page_size,
+        page_size="A4",  # fixed — catalogs are always a single A4 page
         source_text=body.source_text,
     )
     row = await catalog_repo.create(db, row)

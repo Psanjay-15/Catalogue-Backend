@@ -31,6 +31,14 @@ dependencies = [
     "httpx>=0.27.0",                   # Ollama (async HTTP)
 ]
 
+[project.optional-dependencies]
+# Optional headless-Chromium fallback for PDF export, used only if WeasyPrint
+# fails on some exotic CSS. The default install stays light (WeasyPrint only).
+# Enable with:  pip install -e ".[chromium]" && playwright install chromium
+chromium = [
+    "playwright>=1.46.0",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
