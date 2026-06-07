@@ -12,8 +12,10 @@ VALID_LLM_PROVIDERS = {"gemini", "openai", "anthropic", "ollama"}
 
 class CreateCatalogRequest(BaseModel):
 
-    source_text: Optional[str] = Field(None, description="Raw text input (paste a description, brand spec, etc.)")
-    source_file_path: Optional[str] = Field(None, description="Path to a previously uploaded PDF/DOCX/TXT")
+    source_text: Optional[str] = Field(
+        None, max_length=100_000,
+        description="Raw text input (paste a description, brand spec, etc.)",
+    )
     template_name: str = Field("ai", description="Template id. 'ai' lets the LLM design from scratch.")
     style: str = Field("modern", description="Copywriting style — modern/luxury/minimal/corporate/creative")
     theme: str = Field("light", description="Color theme — light or dark")
@@ -48,15 +50,21 @@ class CreateCatalogRequest(BaseModel):
         return v
 
 
+_MAX_HTML = 10_000_000 
+
+
 class UpdateCatalogHtmlRequest(BaseModel):
-    html: str = Field(..., min_length=1, description="The edited full HTML document.")
+    html: str = Field(
+        ..., min_length=1, max_length=_MAX_HTML, description="The edited full HTML document."
+    )
 
 
 class SaveCatalogRequest(BaseModel):
-  
+
     title: Optional[str] = Field(
         None, max_length=200, description="Display name for the saved catalog."
     )
     html: Optional[str] = Field(
-        None, description="Latest edited HTML to persist + re-render before saving."
+        None, max_length=_MAX_HTML,
+        description="Latest edited HTML to persist + re-render before saving.",
     )

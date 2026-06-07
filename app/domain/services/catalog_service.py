@@ -10,6 +10,7 @@ from app.db.models.catalog import (
     STATUS_REFINING,
     STATUS_RENDERING,
 )
+from app.core.sanitize import sanitize_html
 from app.db.repositories.catalog_repo import catalog_repo
 from app.exporters.pdf_exporter import PdfExporter
 from app.llm.factory import get_llm_provider
@@ -47,6 +48,7 @@ class CatalogService:
                 )
                 renderer = get_renderer(cat.template_id, llm=llm)
                 html = await renderer.render(refined, cat.theme, cat.page_size)
+                html = sanitize_html(html)
 
                 # ---- 4. EXPORT -------------------------------------------------
                 # HTML is already persisted in the DB; render the PDF to bytes

@@ -46,6 +46,14 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    return response
+
+
 @app.exception_handler(CatalogMakerError)
 async def catalog_error_handler(request: Request, exc: CatalogMakerError):
     return JSONResponse(

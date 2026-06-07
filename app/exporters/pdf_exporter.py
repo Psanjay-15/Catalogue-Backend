@@ -1,11 +1,53 @@
 from __future__ import annotations
 import asyncio
+import ipaddress
 import re
+import socket
 from pathlib import Path
+from urllib.parse import urlparse
 from app.core.exceptions import ExportError
 from app.core.logging import get_logger
 
 log = get_logger(__name__)
+
+
+def _is_safe_asset_url(url: str) -> bool:
+    """Guard against SSRF / local-file disclosure during PDF rendering.
+
+    The HTML we render is partly user-controlled, so an attacker could embed
+    `<img src="file:///etc/passwd">` or point at an internal address like the
+    cloud metadata endpoint. We allow only inline `data:` URIs and public
+    `http(s)` hosts, blocking every other scheme and any private / loopback /
+    link-local / reserved IP.
+    """
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+    scheme = (parsed.scheme or "").lower()
+    if scheme == "data":
+        return True
+    if scheme not in ("http", "https"):
+        return False  
+    host = parsed.hostname
+    if not host:
+        return False
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except Exception:
+        return False  
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+            or ip.is_unspecified
+        ):
+            return False
+    return True
 
 _PLACEHOLDER_IMG = (
     b"<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'></svg>"
@@ -60,6 +102,9 @@ class PdfExporter:
       
         from weasyprint import default_url_fetcher
 
+        if not _is_safe_asset_url(url):
+            log.warning("blocked unsafe asset URL during PDF render: %s", url)
+            return {"string": _PLACEHOLDER_IMG, "mime_type": "image/svg+xml"}
         try:
             return default_url_fetcher(url, *args, **kwargs)
         except Exception as e:

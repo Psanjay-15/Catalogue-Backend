@@ -4,6 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import HTMLResponse, Response
 from app.api.v1.deps import SessionDep
 from app.db.models.catalog import STATUS_DONE, STATUS_QUEUED, Catalog
+from app.core.sanitize import sanitize_html
 from app.db.repositories.catalog_repo import catalog_repo
 from app.domain.schemas.requests import (
     CreateCatalogRequest,
@@ -115,8 +116,9 @@ async def save_catalog(
         title = body.title.strip()
         fields["title"] = title or None
     if body.html:
-        pdf_bytes = await _render_pdf(body.html)
-        fields.update(html=body.html, pdf_bytes=pdf_bytes, status=STATUS_DONE)
+        html = sanitize_html(body.html)
+        pdf_bytes = await _render_pdf(html)
+        fields.update(html=html, pdf_bytes=pdf_bytes, status=STATUS_DONE)
 
     updated = await catalog_repo.update(db, catalog_id, **fields)
     return _to_response(updated)
@@ -143,12 +145,13 @@ async def update_catalog_html(
     if row is None:
         raise HTTPException(404, "Catalog not found")
 
-    pdf_bytes = await _render_pdf(body.html)
+    html = sanitize_html(body.html)
+    pdf_bytes = await _render_pdf(html)
 
     updated = await catalog_repo.update(
         db,
         catalog_id,
-        html=body.html,
+        html=html,
         pdf_bytes=pdf_bytes,
         status=STATUS_DONE,
     )
