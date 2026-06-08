@@ -47,6 +47,7 @@ class OllamaProvider(LLMProvider):
         page_size: str,
         width_mm: int,
         height_mm: int,
+        style_hint: str | None = None,
     ) -> str:
         prompt = build_freestyle_user_prompt(
             catalog_json=catalog.model_dump_json(indent=2),
@@ -54,6 +55,7 @@ class OllamaProvider(LLMProvider):
             page_size=page_size,
             width=width_mm,
             height=height_mm,
+            style_hint=style_hint,
         )
         body = {
             "model": self.model_name,

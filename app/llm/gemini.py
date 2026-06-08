@@ -66,6 +66,7 @@ class GeminiProvider(LLMProvider):
         page_size: str,
         width_mm: int,
         height_mm: int,
+        style_hint: str | None = None,
     ) -> str:
         from google.genai import types as genai_types
 
@@ -76,6 +77,7 @@ class GeminiProvider(LLMProvider):
             page_size=page_size,
             width=width_mm,
             height=height_mm,
+            style_hint=style_hint,
         )
         config = genai_types.GenerateContentConfig(temperature=0.85)
 

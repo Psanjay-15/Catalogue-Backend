@@ -55,6 +55,7 @@ class OpenAIProvider(LLMProvider):
         page_size: str,
         width_mm: int,
         height_mm: int,
+        style_hint: str | None = None,
     ) -> str:
         client = self._client()
         prompt = build_freestyle_user_prompt(
@@ -63,6 +64,7 @@ class OpenAIProvider(LLMProvider):
             page_size=page_size,
             width=width_mm,
             height=height_mm,
+            style_hint=style_hint,
         )
         try:
             response = await client.chat.completions.create(

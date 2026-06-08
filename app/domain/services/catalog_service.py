@@ -12,9 +12,10 @@ from app.db.models.catalog import (
 )
 from app.core.sanitize import sanitize_html
 from app.db.repositories.catalog_repo import catalog_repo
+from app.db.repositories.template_repo import template_repo
 from app.exporters.pdf_exporter import PdfExporter
 from app.llm.factory import get_llm_provider
-from app.renderers.factory import get_renderer
+from app.renderers.freestyle_renderer import FreestyleRenderer
 
 
 log = get_logger(__name__)
@@ -46,7 +47,12 @@ class CatalogService:
                     status=STATUS_RENDERING,
                     refined_json=refined.model_dump(),
                 )
-                renderer = get_renderer(cat.template_id, llm=llm)
+                style_hint = None
+                if cat.template_id and cat.template_id != "ai":
+                    tpl = await template_repo.get(db, cat.template_id)
+                    if tpl:
+                        style_hint = f"{tpl.name} — {tpl.description}"
+                renderer = FreestyleRenderer(llm, style_hint=style_hint)
                 html = await renderer.render(refined, cat.theme, cat.page_size)
                 html = sanitize_html(html)
 

@@ -122,7 +122,7 @@ THEME ({theme})
 ═══════════════════════════════════════════════════════════
 - LIGHT: warm or cool soft surface for `.page` background, saturated accent, deep ink for text. `html, body` background is a muted neutral (e.g. #cabfa8 or #dddddd).
 - DARK: deep near-black for `.page` (e.g. #0c0d12), vivid accent, off-white text. `html, body` background is pure black-ish (#020203).
-
+{style_directive}
 ═══════════════════════════════════════════════════════════
 CONTENT
 ═══════════════════════════════════════════════════════════
@@ -131,12 +131,14 @@ CONTENT
 - Wrap every editable text node with `contenteditable="true"`.
 
 ═══════════════════════════════════════════════════════════
-IMAGES (Pollinations AI)
+IMAGES (free placeholders — the user replaces them in the editor)
 ═══════════════════════════════════════════════════════════
-- For every <img>, use:
-    https://image.pollinations.ai/prompt/<url-encoded prompt>?width=W&height=H&seed=N&nologo=true&model=flux
-- Prompt from each image_query, append ", professional photography, magazine quality, sharp focus".
-- DIFFERENT seed N per <img> (e.g. 1, 2, 10, 11, 30) so each slot gets a unique image.
+- DO include an <img> for every image slot (hero, products, about, testimonials)
+  so the user has real places to drop in their own pictures later.
+- For each <img> src, use a FREE Lorem Picsum placeholder:
+    https://picsum.photos/seed/<unique-number>/<width>/<height>
+  Use a DIFFERENT seed number per image so each slot looks distinct, and pick
+  width/height to match the slot (e.g. .../seed/12/800/600).
 
 ═══════════════════════════════════════════════════════════
 CATALOG (JSON)
@@ -173,11 +175,23 @@ def build_freestyle_user_prompt(
     page_size: str,
     width: int,
     height: int,
+    style_hint: str | None = None,
 ) -> str:
+    style_directive = ""
+    if style_hint:
+        style_directive = (
+            "\n═══════════════════════════════════════════════════════════\n"
+            "TEMPLATE STYLE TO FOLLOW\n"
+            "═══════════════════════════════════════════════════════════\n"
+            f"- Emulate this template's aesthetic: {style_hint}\n"
+            "- Match its palette, typography and mood as closely as you can, while\n"
+            "  still obeying every one-page layout rule above.\n"
+        )
     return FREESTYLE_PROMPT.format(
         width=width,
         height=height,
         page_size=page_size,
         theme=theme,
         catalog_json=catalog_json,
+        style_directive=style_directive,
     )

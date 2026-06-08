@@ -26,6 +26,7 @@ class LLMProvider(ABC):
         page_size: str,
         width_mm: int,
         height_mm: int,
+        style_hint: str | None = None,
     ) -> str:
         """Ask the LLM to design a complete single-page HTML brochure for `catalog`.
 

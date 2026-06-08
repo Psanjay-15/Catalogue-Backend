@@ -7,8 +7,9 @@ from app.renderers.base import Renderer
 
 class FreestyleRenderer(Renderer):
 
-    def __init__(self, llm: LLMProvider) -> None:
+    def __init__(self, llm: LLMProvider, style_hint: str | None = None) -> None:
         self.llm = llm
+        self.style_hint = style_hint
 
     async def render(
         self,
@@ -24,6 +25,7 @@ class FreestyleRenderer(Renderer):
                 page_size=page_size,
                 width_mm=width_mm,
                 height_mm=height_mm,
+                style_hint=self.style_hint,
             )
         except Exception as e:
             raise RenderError(f"Freestyle render failed: {e}") from e
