@@ -13,7 +13,7 @@ def configure_logging(level: str = "INFO") -> None:
     # Tame chatty loggers
     logging.getLogger("httpx").setLevel("WARNING")
     logging.getLogger("httpcore").setLevel("WARNING")
-    logging.getLogger("sqlalchemy.engine").setLevel("WARNING")
+    logging.getLogger("pymongo").setLevel("WARNING")
 
 
 def get_logger(name: str) -> logging.Logger:

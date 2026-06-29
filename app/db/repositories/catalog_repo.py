@@ -1,26 +1,36 @@
 from __future__ import annotations
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo import DESCENDING
+
 from app.db.models.catalog import Catalog
 from app.db.repositories.base import BaseRepository
 
 
 class CatalogRepository(BaseRepository[Catalog]):
+    collection_name = "catalogs"
     model = Catalog
 
     async def list_saved(
-        self, db: AsyncSession, *, limit: int = 200, offset: int = 0
+        self,
+        db: AsyncIOMotorDatabase,
+        *,
+        limit: int = 200,
+        offset: int = 0,
     ) -> list[Catalog]:
-        """Catalogs the user explicitly saved, newest-touched first."""
-        stmt = (
-            select(Catalog)
-            .where(Catalog.saved.is_(True))
-            .order_by(Catalog.updated_at.desc())
+        cursor = (
+            self.collection(db)
+            .find({"saved": True})
+            .sort("updated_at", DESCENDING)
+            .skip(offset)
             .limit(limit)
-            .offset(offset)
         )
-        result = await db.execute(stmt)
-        return list(result.scalars())
+        rows: list[Catalog] = []
+        async for doc in cursor:
+            catalog = Catalog.from_mongo(doc)
+            if catalog is not None:
+                rows.append(catalog)
+        return rows
 
 
 catalog_repo = CatalogRepository()

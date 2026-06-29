@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from app.api.v1.catalogs import router as catalogs_router
 from app.api.v1.templates import router as templates_router
 from app.config import settings
-from app.core.database import create_all
+from app.core.database import close_database, init_database
 from app.core.exceptions import CatalogMakerError
 from app.core.logging import configure_logging, get_logger
 from app.domain.schemas.responses import HealthResponse
@@ -24,9 +24,10 @@ log = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("starting AI Catalog Maker server")
-    await create_all()
+    await init_database()
     log.info("server ready")
     yield
+    await close_database()
     log.info("server shutting down")
 
 

@@ -1,49 +1,84 @@
-"""Catalog ORM model — one row per generation job."""
+"""Catalog document model — one MongoDB document per generation job."""
 
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Boolean, ForeignKey, LargeBinary, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
 
-from app.core.database import Base
-
-
-STATUS_QUEUED     = "queued"
+STATUS_QUEUED = "queued"
 STATUS_EXTRACTING = "extracting"
-STATUS_REFINING   = "refining"
-STATUS_RENDERING  = "rendering"
-STATUS_EXPORTING  = "exporting"
-STATUS_DONE       = "done"
-STATUS_FAILED     = "failed"
+STATUS_REFINING = "refining"
+STATUS_RENDERING = "rendering"
+STATUS_EXPORTING = "exporting"
+STATUS_DONE = "done"
+STATUS_FAILED = "failed"
 
 
-class Catalog(Base):
-    __tablename__ = "catalogs"
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
-    id:            Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    status:        Mapped[str] = mapped_column(String(32), nullable=False, index=True, default=STATUS_QUEUED)
-    template_id:   Mapped[str] = mapped_column(String(64), ForeignKey("templates.id"), nullable=False)
-    llm_provider:  Mapped[str] = mapped_column(String(32), nullable=False)
-    style:         Mapped[str] = mapped_column(String(32), nullable=False, default="modern")
-    theme:         Mapped[str] = mapped_column(String(16), nullable=False)
-    page_size:     Mapped[str] = mapped_column(String(16), nullable=False)
-    source_text:   Mapped[str] = mapped_column(Text, nullable=False)
-    refined_json:  Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    html:          Mapped[str | None] = mapped_column(Text, nullable=True)
-    # The exported PDF is stored in the database (as raw bytes), not on local
-    # disk — generated on demand and cached here so downloads are instant.
-    pdf_bytes:     Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
-    error:         Mapped[str | None] = mapped_column(Text, nullable=True)
-    # "Saved Catalogs" library: a generation becomes a kept catalog when the
-    # user explicitly saves it (and gives it a name). Per-user scoping is
-    # intentionally deferred until auth lands — for now the library is shared.
-    saved:         Mapped[bool] = mapped_column(Boolean, nullable=False, index=True, server_default="false", default=False)
-    title:         Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at:    Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at:    Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+@dataclass(slots=True)
+class Catalog:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    status: str = STATUS_QUEUED
+    template_id: str = "ai"
+    llm_provider: str = "gemini"
+    style: str = "modern"
+    theme: str = "light"
+    page_size: str = "A4"
+    source_text: str = ""
+    refined_json: dict[str, Any] | None = None
+    html: str | None = None
+    pdf_bytes: bytes | None = None
+    error: str | None = None
+    saved: bool = False
+    title: str | None = None
+    created_at: datetime = field(default_factory=utcnow)
+    updated_at: datetime = field(default_factory=utcnow)
+
+    @classmethod
+    def from_mongo(cls, doc: dict[str, Any] | None) -> "Catalog | None":
+        if doc is None:
+            return None
+        return cls(
+            id=uuid.UUID(str(doc["_id"])),
+            status=doc["status"],
+            template_id=doc["template_id"],
+            llm_provider=doc["llm_provider"],
+            style=doc.get("style", "modern"),
+            theme=doc["theme"],
+            page_size=doc["page_size"],
+            source_text=doc["source_text"],
+            refined_json=doc.get("refined_json"),
+            html=doc.get("html"),
+            pdf_bytes=bytes(doc["pdf_bytes"]) if doc.get("pdf_bytes") is not None else None,
+            error=doc.get("error"),
+            saved=bool(doc.get("saved", False)),
+            title=doc.get("title"),
+            created_at=doc["created_at"],
+            updated_at=doc["updated_at"],
+        )
+
+    def to_mongo(self) -> dict[str, Any]:
+        return {
+            "_id": str(self.id),
+            "status": self.status,
+            "template_id": self.template_id,
+            "llm_provider": self.llm_provider,
+            "style": self.style,
+            "theme": self.theme,
+            "page_size": self.page_size,
+            "source_text": self.source_text,
+            "refined_json": self.refined_json,
+            "html": self.html,
+            "pdf_bytes": self.pdf_bytes,
+            "error": self.error,
+            "saved": self.saved,
+            "title": self.title,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }

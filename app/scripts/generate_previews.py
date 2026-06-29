@@ -3,7 +3,7 @@ import asyncio
 import json
 from pathlib import Path
 from app.config import settings
-from app.core.database import AsyncSessionLocal
+from app.core.database import close_database, get_database, init_database
 from app.core.logging import configure_logging, get_logger
 from app.db.repositories.template_repo import template_repo
 from app.domain.schemas.catalog import VALID_TEMPLATES, Catalog
@@ -48,30 +48,33 @@ async def main() -> None:
     sample = await _load_or_build_sample_catalog()
     log.info("brand_name=%s, products=%d", sample.brand_name, len(sample.products))
 
-    async with AsyncSessionLocal() as db:
-        for template_id in sorted(VALID_TEMPLATES):
-            try:
-                log.info("rendering sample for %s ...", template_id)
-                html = await _render_sample_html(template_id, sample)
-            except Exception as e:
-                log.error("FAILED %s: %s", template_id, e)
-                continue
+    await init_database()
+    db = get_database()
+    for template_id in sorted(VALID_TEMPLATES):
+        try:
+            log.info("rendering sample for %s ...", template_id)
+            html = await _render_sample_html(template_id, sample)
+        except Exception as e:
+            log.error("FAILED %s: %s", template_id, e)
+            continue
 
-            name, kind, description = TEMPLATE_CATALOG.get(
-                template_id,
-                (template_id.title(), "fixed", ""),
-            )
-            await template_repo.upsert_by_id(
-                db,
-                template_id,
-                defaults={
-                    "name":         name,
-                    "description":  description,
-                    "kind":         kind,
-                    "sample_html":  html,
-                },
-            )
-            log.info("  -> seeded templates.%s", template_id)
+        name, kind, description = TEMPLATE_CATALOG.get(
+            template_id,
+            (template_id.title(), "fixed", ""),
+        )
+        await template_repo.upsert_by_id(
+            db,
+            template_id,
+            defaults={
+                "name":         name,
+                "description":  description,
+                "kind":         kind,
+                "sample_html":  html,
+            },
+        )
+        log.info("  -> seeded templates.%s", template_id)
+
+    await close_database()
 
     log.info("done. Visit http://localhost:8000/api/v1/templates to see the list.")
 

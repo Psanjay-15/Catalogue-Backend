@@ -1,18 +1,23 @@
 from __future__ import annotations
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from motor.motor_asyncio import AsyncIOMotorDatabase
+
 from app.db.models.template import Template
 from app.db.repositories.base import BaseRepository
 
 
 class TemplateRepository(BaseRepository[Template]):
+    collection_name = "templates"
     model = Template
 
-    async def list_all(self, db: AsyncSession) -> list[Template]:
-        """Return all templates sorted by id — used by GET /templates."""
-        stmt = select(Template).order_by(Template.id)
-        result = await db.execute(stmt)
-        return list(result.scalars())
+    async def list_all(self, db: AsyncIOMotorDatabase) -> list[Template]:
+        cursor = self.collection(db).find({}).sort("_id", 1)
+        rows: list[Template] = []
+        async for doc in cursor:
+            template = Template.from_mongo(doc)
+            if template is not None:
+                rows.append(template)
+        return rows
 
 
 template_repo = TemplateRepository()

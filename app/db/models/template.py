@@ -1,17 +1,40 @@
 from __future__ import annotations
+
+from dataclasses import dataclass, field
 from datetime import datetime
-from sqlalchemy import String, Text
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
-from app.core.database import Base
+from typing import Any
+
+from app.db.models.catalog import utcnow
 
 
-class Template(Base):
-    __tablename__ = "templates"
+@dataclass(slots=True)
+class Template:
+    id: str
+    name: str
+    description: str
+    kind: str
+    sample_html: str
+    created_at: datetime = field(default_factory=utcnow)
 
-    id:           Mapped[str] = mapped_column(String(64), primary_key=True)
-    name:         Mapped[str] = mapped_column(String(120), nullable=False)
-    description:  Mapped[str] = mapped_column(Text, nullable=False)
-    kind:         Mapped[str] = mapped_column(String(32), nullable=False)
-    sample_html:  Mapped[str] = mapped_column(Text, nullable=False)
-    created_at:   Mapped[datetime] = mapped_column(server_default=func.now())
+    @classmethod
+    def from_mongo(cls, doc: dict[str, Any] | None) -> "Template | None":
+        if doc is None:
+            return None
+        return cls(
+            id=doc["_id"],
+            name=doc["name"],
+            description=doc["description"],
+            kind=doc["kind"],
+            sample_html=doc["sample_html"],
+            created_at=doc["created_at"],
+        )
+
+    def to_mongo(self) -> dict[str, Any]:
+        return {
+            "_id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "kind": self.kind,
+            "sample_html": self.sample_html,
+            "created_at": self.created_at,
+        }

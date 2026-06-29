@@ -15,8 +15,8 @@ dependencies = [
     "python-dotenv>=1.0.0",       # loads .env into the environment (see app/config.py)
 
     # DB
-    "sqlalchemy[asyncio]>=2.0.30",
-    "asyncpg>=0.29.0",
+    "motor>=3.6.0",
+    "pymongo>=4.9.0",
 
     # Templating + extraction (Phase 1 deps that stay)
     "jinja2>=3.1.0",
@@ -37,6 +37,11 @@ dependencies = [
 # Enable with:  pip install -e ".[chromium]" && playwright install chromium
 chromium = [
     "playwright>=1.46.0",
+]
+
+# Only needed when copying old local Postgres data into MongoDB.
+postgres-migration = [
+    "asyncpg>=0.29.0",
 ]
 
 [tool.setuptools.packages.find]

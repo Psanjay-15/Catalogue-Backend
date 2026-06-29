@@ -30,7 +30,12 @@ class Settings:
 
     def __init__(self) -> None:
         # --- Database ---
-        self.database_url: str = _env("DATABASE_URL")
+        self.mongodb_uri: str = _env_str(
+            "MONGODB_URI",
+            _env_str("DATABASE_URL", "mongodb://localhost:27017"),
+        )
+        self.mongodb_database: str = _env_str("MONGODB_DATABASE", "catalog_maker")
+        self.postgres_database_url: str | None = _env("POSTGRES_DATABASE_URL")
 
         # --- LLM ---
         self.gemini_api_key: str | None = _env("GEMINI_API_KEY")
