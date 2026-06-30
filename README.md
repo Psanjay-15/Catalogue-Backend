@@ -168,7 +168,6 @@ pip install -r requirements.txt
 Create a `.env` file inside the `server/` folder:
 
 ```env
-# Database
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_DATABASE=catalog_maker
 GEMINI_API_KEY=your_gemini_api_key
