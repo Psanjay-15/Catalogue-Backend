@@ -36,7 +36,7 @@ def _coerce_str_list(v: Any) -> Any:
             title = str(item.get("title") or item.get("name") or "").strip()
             desc = str(item.get("description") or item.get("value") or "").strip()
             if title and desc:
-                text = f"{title} — {desc}"
+                text = f"{title} - {desc}"
             elif title or desc:
                 text = title or desc
             else:

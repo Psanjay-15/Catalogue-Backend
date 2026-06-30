@@ -86,7 +86,7 @@ async def create_catalog(
         llm_provider=body.llm_provider,
         style=body.style,
         theme=body.theme,
-        page_size="A4",  # fixed — catalogs are always a single A4 page
+        page_size="A4",  # fixed - catalogs are always a single A4 page
         source_text=body.source_text,
     )
     row = await catalog_repo.create(db, row)
@@ -109,7 +109,7 @@ async def extract_source_text(file: UploadFile = File(...)) -> ExtractTextRespon
     if not data:
         raise HTTPException(422, "The uploaded file is empty.")
     if len(data) > _MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "File too large — the maximum is 10 MB.")
+        raise HTTPException(413, "File too large - the maximum is 10 MB.")
 
     try:
         text = extract_text_from_bytes(filename, data)
@@ -127,7 +127,7 @@ async def extract_source_text(file: UploadFile = File(...)) -> ExtractTextRespon
 
 @router.get("/saved", response_model=list[SavedCatalogSummary])
 async def list_saved_catalogs(db: SessionDep) -> list[SavedCatalogSummary]:
-    """The "Saved Catalogs" library — catalogs the user explicitly kept."""
+    """The "Saved Catalogs" library - catalogs the user explicitly kept."""
     rows = await catalog_repo.list_saved(db)
     return [_to_summary(r) for r in rows]
 

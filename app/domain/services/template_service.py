@@ -67,7 +67,7 @@ TEMPLATE_CATALOG: dict[str, tuple[str, str, str]] = {
     "corporate":    ("Corporate",                             "fixed",        "Navy gradient hero, structured grid, blue accents."),
     "creative":     ("Creative",                              "fixed",        "Vivid gradients, hand-drawn accents, hard-offset shadows."),
     "showcase":     ("Showcase",                              "fixed",        "ONE featured product hero + supporting product cards."),
-    "product-grid": ("Product Grid",                          "fixed",        "Tight 3-column product grid — for catalogs with many products."),
+    "product-grid": ("Product Grid",                          "fixed",        "Tight 3-column product grid - for catalogs with many products."),
     "service":      ("Service",                               "fixed",        "Process steps + service offerings, designed for service businesses."),
     "magazine":     ("Magazine",                              "fixed",        "Editorial 3-column spread with masthead and pull-quotes."),
 }

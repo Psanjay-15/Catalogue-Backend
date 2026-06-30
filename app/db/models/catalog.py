@@ -1,4 +1,4 @@
-"""Catalog document model — one MongoDB document per generation job."""
+"""Catalog document model - one MongoDB document per generation job."""
 
 from __future__ import annotations
 

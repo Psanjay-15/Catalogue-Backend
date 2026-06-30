@@ -32,7 +32,7 @@ def extract_text(source: Union[str, Path]) -> str:
 
 def extract_text_from_bytes(filename: str, data: bytes) -> str:
     """Extract plain text from an uploaded file's bytes, dispatching by its
-    extension. In-memory only — no path is derived from user input."""
+    extension. In-memory only - no path is derived from user input."""
     ext = Path(filename or "").suffix.lower()
     extractor_cls = _REGISTRY.get(ext)
     if extractor_cls is None:

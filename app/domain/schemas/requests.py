@@ -17,8 +17,8 @@ class CreateCatalogRequest(BaseModel):
         description="Raw text input (paste a description, brand spec, etc.)",
     )
     template_name: str = Field("ai", description="Template id. 'ai' lets the LLM design from scratch.")
-    style: str = Field("modern", description="Copywriting style — modern/luxury/minimal/corporate/creative")
-    theme: str = Field("light", description="Color theme — light or dark")
+    style: str = Field("modern", description="Copywriting style - modern/luxury/minimal/corporate/creative")
+    theme: str = Field("light", description="Color theme - light or dark")
     llm_provider: str = Field("gemini", description="Which LLM to use")
 
     @field_validator("template_name")

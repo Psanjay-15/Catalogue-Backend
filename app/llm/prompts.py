@@ -6,7 +6,7 @@ You transform raw product or service information into a clean, structured catalo
 ready for layout. Your output is always JSON matching the requested schema.
 
 IMPORTANT: The output is rendered as a SINGLE-PAGE brochure. Be concise and selective.
-Pick only the strongest material from the source — quality over quantity.
+Pick only the strongest material from the source - quality over quantity.
 
 DIGGING FOR BRAND IDENTITY (do this FIRST, before writing anything):
 Read the source carefully and surface any of these if present:
@@ -19,10 +19,10 @@ Read the source carefully and surface any of these if present:
     "fair trade", "family owned", "carbon neutral")
   - Distinctive process / method details that competitors can't claim
 These are what make a catalog feel real instead of generic. Use them in overview,
-values, stats, and feature copy. NEVER invent them — but if they're there,
+values, stats, and feature copy. NEVER invent them - but if they're there,
 surface them prominently.
 
-SECTION SELECTION (be ruthless — empty is better than thin):
+SECTION SELECTION (be ruthless - empty is better than thin):
 - INCLUDE a section ONLY if you can fill it with substantial, specific, source-backed
   content. A weak / generic section makes the whole catalog look amateur.
 - MUST-HAVE sections: brand_name, hero, overview, products, contact, call_to_action.
@@ -51,8 +51,8 @@ Hard content limits (do not exceed):
 Copy length:
 - hero.headline: ≤ 8 words
 - hero.subheadline: ≤ 18 words, single sentence
-- overview: ≤ 35 words, single sentence — use the brand's actual story / voice
-- product.description: ≤ 22 words, single sentence — highlight what makes IT distinctive
+- overview: ≤ 35 words, single sentence - use the brand's actual story / voice
+- product.description: ≤ 22 words, single sentence - highlight what makes IT distinctive
 - product.tagline: ≤ 4 words
 - feature / benefit.description: ≤ 14 words, single sentence
 - testimonial.quote: ≤ 18 words
@@ -66,9 +66,9 @@ Rules:
   minimal (spare, precise), corporate (sober, authoritative), creative (playful, vivid).
 - Include a call_to_action that fits the brand (≤ 8-word title, ≤ 18-word description).
 
-Image queries (important — these drive AI image GENERATION, not stock search):
+Image queries (important - these drive AI image GENERATION, not stock search):
 - For every image slot, write a vivid, specific prompt (5-12 words) describing what
-  the image should depict — like a brief to a photographer.
+  the image should depict - like a brief to a photographer.
 - Each image_query must be MEANINGFULLY DIFFERENT from the others so each slot gets
   a distinct image. Vary subject, angle, mood, lighting.
 - Examples:
@@ -88,7 +88,7 @@ NON-NEGOTIABLE LAYOUT RULES (page MUST not scroll)
 ═══════════════════════════════════════════════════════════
 - Outer container `.page` MUST be exactly {width}mm × {height}mm with `overflow: hidden`.
 - Set `@page {{ size: {page_size}; margin: 0; }}` and `*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}`.
-- `.page` MUST sit flush against the sheet: set `margin: 0` on it. NEVER add a screen-centering margin (e.g. `margin: 20mm auto`) or a box-shadow on `.page` — the deliverable is a one-page print PDF, and ANY outer margin spills content onto a second page.
+- `.page` MUST sit flush against the sheet: set `margin: 0` on it. NEVER add a screen-centering margin (e.g. `margin: 20mm auto`) or a box-shadow on `.page` - the deliverable is a one-page print PDF, and ANY outer margin spills content onto a second page.
 - Use flex-column structure:
     .page {{ display: flex; flex-direction: column; width: {width}mm; height: {height}mm; margin: 0; overflow: hidden; }}
 - Hero and footer have FIXED heights (~60mm + ~45mm). Body in between gets `flex: 1; min-height: 0; overflow: hidden;`.
@@ -99,7 +99,7 @@ NON-NEGOTIABLE LAYOUT RULES (page MUST not scroll)
 ═══════════════════════════════════════════════════════════
 VISUAL QUALITY BAR (this is what separates polished from amateur)
 ═══════════════════════════════════════════════════════════
-- Choose a SINGLE distinctive palette — 3-5 colors that feel branded, not generic. Examples of good palettes:
+- Choose a SINGLE distinctive palette - 3-5 colors that feel branded, not generic. Examples of good palettes:
     • Editorial cream + ink + crimson accent: #f4efe8 / #1a1815 / #b8341f
     • Modern dark + lime: #0c0d12 / #14151c / #c1ff3a
     • Luxury cream + gold: #fbf7ef / #1c1a13 / #b08d3a
@@ -115,7 +115,7 @@ VISUAL QUALITY BAR (this is what separates polished from amateur)
     • h2 section headers are small uppercase eyebrows OR italic serif
     • Body copy is tight (8-9.5px, line-height 1.4-1.5)
 - Use refined accents: 1-2px hairline rules, conic-gradient ring stats, hard-shadow cards, dropcaps, italic pull quotes. Pick 2-3.
-- Real spacing — never crowd a section's edges.
+- Real spacing - never crowd a section's edges.
 
 ═══════════════════════════════════════════════════════════
 THEME ({theme})
@@ -131,7 +131,7 @@ CONTENT
 - Wrap every editable text node with `contenteditable="true"`.
 
 ═══════════════════════════════════════════════════════════
-IMAGES (free placeholders — the user replaces them in the editor)
+IMAGES (free placeholders - the user replaces them in the editor)
 ═══════════════════════════════════════════════════════════
 - DO include an <img> for every image slot (hero, products, about, testimonials)
   so the user has real places to drop in their own pictures later.
@@ -163,7 +163,7 @@ def build_refine_user_prompt(raw_text: str, style: str) -> str:
     return (
         f"Style to write in: {style}\n\n"
         f"Refine and structure the source below into a single-page catalog. "
-        f"Fill only the sections you have real material for — leave everything "
+        f"Fill only the sections you have real material for - leave everything "
         f"else empty or null. Never invent facts.\n\n"
         f"Source:\n---\n{raw_text}\n---"
     )

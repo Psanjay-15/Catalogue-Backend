@@ -51,7 +51,7 @@ class CatalogService:
             if cat.template_id and cat.template_id != "ai":
                 tpl = await template_repo.get(db, cat.template_id)
                 if tpl:
-                    style_hint = f"{tpl.name} — {tpl.description}"
+                    style_hint = f"{tpl.name} - {tpl.description}"
             renderer = FreestyleRenderer(llm, style_hint=style_hint)
             html = await renderer.render(refined, cat.theme, cat.page_size)
             html = sanitize_html(html)
